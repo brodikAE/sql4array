@@ -26,8 +26,7 @@ Functions available in WHERE clause :
 LOWER(var), LCASE(var), UPPER(var), UCASE(var), TRIM(var)
 */
  
-class sql4array
-{
+class sql4array{
 
 	/* Init
 	-------------------------------------------- */
@@ -50,8 +49,7 @@ class sql4array
 
 	/* Query function
 	-------------------------------------------- */
-	public function query($query)
-	{
+	public function query($query){
 
 		/* Initialization
 		-------------------------------------------- */
@@ -77,20 +75,17 @@ class sql4array
 		$this->time_end = microtime(true);
 	
 		return $this->response;
-
 	}
 	
 	/* Query duration
 	-------------------------------------------- */
-	public function duration()
-	{
+	public function duration(){
 		return $this->time_end - $this->time_start;
 	}
 	
 	/* Destroy current values
 	-------------------------------------------- */
-	private function destroy()
-	{
+	private function destroy(){
 		$this->query              = FALSE;
 		$this->parse_query        = FALSE;
 		$this->replaced_table     = FALSE;
@@ -111,8 +106,7 @@ class sql4array
 	
 	/* Parse SQL query
 	-------------------------------------------- */
-	private function parse_query()
-	{
+	private function parse_query(){
 		$this->parse_query = preg_replace('#ORDER(\s){2,}BY(\s+)(.*)(\s+)(ASC|DESC)#i', 'ORDER BY \\3 \\5', $this->query);
 
 		$e = 0;
@@ -133,8 +127,7 @@ class sql4array
 	
 	/* Parse SQL 'select' clause
 	-------------------------------------------- */
-	private function parse_select()
-	{
+	private function parse_select(){
 		$key = array_search("distinct", $this->parse_query_lower);
 		
 		if ($key === FALSE)
@@ -147,76 +140,57 @@ class sql4array
 		
 		foreach ($arrays as $array)
 			$this->parse_select[] = $array;
-
 	}
 
 	/* Parse again SQL 'select' clause with 'as' keyword
 	-------------------------------------------- */
-	private function parse_select_as()
-	{
-		foreach ($this->parse_select as $select)
-		{
-			if (eregi('as', $select))
-			{
+	private function parse_select_as(){
+		foreach ($this->parse_select as $select){
+			if (eregi('as', $select)){
 				$arrays	= preg_split('#((\s)+AS(\s)+)#i', $select, -1, PREG_SPLIT_NO_EMPTY);
 				$this->parse_select_as[$arrays[1]] = $arrays[0];
-			}
-			else
-			{
+			}else{
 				$this->parse_select_as[$select] = $select;
 			}
 		}
-
 	}
 	
 	/* Parse SQL 'from' clause
 	-------------------------------------------- */
-	private function parse_from()
-	{
-		$key				= array_search("from", $this->parse_query_lower);
-		$this->parse_from	= $this->parse_query[$key+1];
+	private function parse_from(){
+		$key = array_search("from", $this->parse_query_lower);
+		$this->parse_from = $this->parse_query[$key+1];
 
 		if(preg_match('#^(a:0:{}(;)?|s:0:""(;)?|N;)#', $this->parse_from))
 			$this->pass = TRUE;
-
 	}
 	
 	/* Parse again SQL 'from' clause with 'as' keyword
 	-------------------------------------------- */
-	private function parse_from_as()
-	{
-
+	private function parse_from_as(){
 		if($this->pass)
 			return;
 
-		if (eregi('AS', $this->parse_from))
-		{
+		if (eregi('AS', $this->parse_from)){
 			$arrays	= preg_split('#((\s)+AS(\s)+)#i', $this->parse_from, -1, PREG_SPLIT_NO_EMPTY);
 			$table	= $arrays[0];	
 			$this->parse_from_as[$arrays[1]]	= $table;
-		}
-		else
-		{
+		}else{
 			$table = $this->parse_from;
 			$this->parse_from_as[$this->parse_from]	= $table;
 		}
 
 		$table = preg_replace('#tabella_(\d+)#e', "\$this->replaced_table['\\1']", $table);
-
 		$this->table = unserialize($table);
-
 	}
 	
 	/* Parse again SQL 'from' clause with 'as' keyword
 	-------------------------------------------- */
-	private function get_array_columns()
-	{
+	private function get_array_columns(){
 		if($this->pass)
 			return;
 
-		if (count($this->table) > 0)
-		{
-
+		if (count($this->table) > 0){
 			foreach (current($this->table) as $key => $value)
 				$this->array_columns[$key] = $key;
 				
@@ -224,16 +198,13 @@ class sql4array
 				if (array_search($key, $this->parse_select_as) !== FALSE)
 					$this->array_columns[array_search($key, $this->parse_select_as)] = $value;
 			
-		}
-		else
+		}else
 			trigger_error("Array given as table is empty.", E_USER_ERROR);
 	}
 	
 	/* Parse SQL 'where' clause
 	-------------------------------------------- */
-	private function parse_where()
-	{
-
+	private function parse_where(){
 		if($this->pass)
 			return;
 
@@ -249,9 +220,9 @@ class sql4array
 
 		/* SQL Functions
 		-------------------------------------------- */
-		$patterns[]		= '#(LOWER|LCASE)\((.*)\)#ie';
-		$patterns[]		= '#(UPPER|UCASE)\((.*)\)#ie';
-		$patterns[]		= '#TRIM\((.*)\)#ie';
+		$patterns[]	= '#(LOWER|LCASE)\((.*)\)#ie';
+		$patterns[]	= '#(UPPER|UCASE)\((.*)\)#ie';
+		$patterns[]	= '#TRIM\((.*)\)#ie';
 	
 		$replacements[]	= "'strtolower(\\2)'";
 		$replacements[]	= "'strtoupper(\\2)'";
@@ -259,12 +230,12 @@ class sql4array
 
 		/* Basics SQL operators
 		-------------------------------------------- */
-		$patterns[]		= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(=|IS)(\s)+([[:digit:]]+)(\s)?#ie';
-		$patterns[]		= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(=|IS)(\s)+(\'|\")(.*?)(\'|\")(\s)?#ie';
-		$patterns[]		= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(>|<|>=|<=)(\s)+([[:digit:]]+)(\s)?#ie';
-		$patterns[]		= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(>|<|>=|<=)(\s)+(\'|\")(.*?)(\'|\")(\s)?#ie';
-		$patterns[]		= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(<>|IS NOT|!=)(\s)+([[:digit:]]+)(\s)?#ie';
-		$patterns[]		= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(<>|IS NOT|!=)(\s)+(\'|\")(.*?)(\'|\")(\s)?#ie';
+		$patterns[]	= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(=|IS)(\s)+([[:digit:]]+)(\s)?#ie';
+		$patterns[]	= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(=|IS)(\s)+(\'|\")(.*?)(\'|\")(\s)?#ie';
+		$patterns[]	= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(>|<|>=|<=)(\s)+([[:digit:]]+)(\s)?#ie';
+		$patterns[]	= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(>|<|>=|<=)(\s)+(\'|\")(.*?)(\'|\")(\s)?#ie';
+		$patterns[]	= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(<>|IS NOT|!=)(\s)+([[:digit:]]+)(\s)?#ie';
+		$patterns[]	= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(<>|IS NOT|!=)(\s)+(\'|\")(.*?)(\'|\")(\s)?#ie';
 		$patterns[] 	= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(IS\s*)?(IN)(\s)+\((.*?)\)(\s)?#ie';
 		$patterns[] 	= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(IS\s*)?(NOT IN)(\s)+\((.*?)\)(\s)?#ie';
 		$patterns[] 	= '#(([a-zA-Z0-9\._]+)(\())?([a-zA-Z0-9\._]+)(\))?(\s)+(IS\s*)?(BETWEEN)(\s)+([[:digit:]]+)(\s)+(AND)(\s)+([[:digit:]]+)(\s)?#ie';
@@ -308,27 +279,21 @@ class sql4array
 	
 	/* Return variable to test
 	-------------------------------------------- */
-	private function parse_where_key($key)
-	{
-
+	private function parse_where_key($key){
 		if($this->pass)
 			return;
 
-		if (ereg('\.', $key))
-		{
+		if (ereg('\.', $key)){
 			list($table, $col) = explode('.', $key);
 			return '$row['.$this->array_columns[$col].']';
-		}
-		else
-		{
+		}else{
 			return '$row['.$this->array_columns[$key].']';
 		}
 	}
 	 
 	/* Format IN clause for PHP
 	-------------------------------------------- */
-	private function parse_in($string)
-	{
+	private function parse_in($string){
 		$array	= explode(',', $string);
 		$array	= array_map('trim', $array);
 
@@ -337,13 +302,11 @@ class sql4array
 	
 	/* Parse SQL order by parameters
 	-------------------------------------------- */
-	private function parse_order()
-	{
-
+	private function parse_order(){
 		if($this->pass)
 			return;
 
-		$key	= array_search("order by", $this->parse_query_lower);
+		$key = array_search("order by", $this->parse_query_lower);
 		
 		if ($key === FALSE)
 			return;
@@ -356,35 +319,32 @@ class sql4array
 		
 		$arrays	= array_map('trim', $arrays);
 		
-		$multisort	= "array_multisort(";
+		$multisort = "array_multisort(";
 		
-		foreach ($arrays as $array)
-		{
-			list($col, $sort)	= preg_split('#((\s)+)#', $array, -1, PREG_SPLIT_NO_EMPTY);
-			$multisort			.= "\$this->split_array(\$this->table, '$col'), SORT_".strtoupper($sort).", SORT_REGULAR, ";
+		foreach ($arrays as $array){
+			list($col, $sort) = preg_split('#((\s)+)#', $array, -1, PREG_SPLIT_NO_EMPTY);
+			$multisort .= "\$this->split_array(\$this->table, '$col'), SORT_".strtoupper($sort).", SORT_REGULAR, ";
 		}
 		
-		$multisort	.= "\$this->table);";
+		$multisort .= "\$this->table);";
 
 		eval($multisort);
 	}
 
 	/* Execute query
 	-------------------------------------------- */
-	private function exec_query()
-	{
-
+	private function exec_query(){
 		if($this->pass)
 			return;
 
-		$koffset	= array_search("offset", $this->parse_query_lower);
-		$klimit		= array_search("limit", $this->parse_query_lower);
+		$koffset = array_search("offset", $this->parse_query_lower);
+		$klimit	 = array_search("limit", $this->parse_query_lower);
 		
 		if ($koffset !== FALSE)
 			$offset	= (int) $this->parse_query[$koffset+1];
 
 		if ($klimit !== FALSE){
-		$limit	= (int) $this->parse_query[$klimit+1];
+		$limit = (int) $this->parse_query[$klimit+1];
 			if(preg_match('#(\d+)(\s*),(\s*)(\d*)#', $this->parse_query[$klimit+1], $off)){
 				$offset	= (int) $off[1];
 				$limit	= (int) $off[4];
@@ -392,46 +352,38 @@ class sql4array
 			}
 		}
 	
-		$irow		= 0;
-		$distinct	= array();
+		$irow = 0;
+		$distinct = array();
 
-		foreach ($this->table as $row)
-		{
+		foreach ($this->table as $row){
 			// Offset
-			if ($koffset !== FALSE && $irow < $offset)
-			{
+			if ($koffset !== FALSE && $irow < $offset){
 				$irow++;
 				continue;
 			}
 
-			if (eval($this->parse_where))
-			{
-				if ($this->parse_select_as[0] == '*')
-				{		
+			if (eval($this->parse_where)){
+				if ($this->parse_select_as[0] == '*'){		
 					if ($this->distinct_query && in_array($row, $distinct))
 						continue;
-					else if (!$this->distinct_query)
+					elseif (!$this->distinct_query)
 						$this->response[] = $row;
-					else
-					{
-						$this->response[]	= $row;
-						$distinct[]			= $row;
+					else{
+						$this->response[] = $row;
+						$distinct[] = $row;
 					}
 
-				}		
-				else
-				{
+				}else{
 					foreach ($this->parse_select_as as $key => $value)
 						$temp[$key] = $row[$value];
 					
 					if ($this->distinct_query && in_array($row, $distinct))
 						continue;
-					else if (!$this->distinct_query)
+					elseif (!$this->distinct_query)
 						$this->response[] = $row;
-					else
-					{
-						$this->response[]	= $row;
-						$distinct[]			= $row;
+					else{
+						$this->response[] = $row;
+						$distinct[] = $row;
 					}
 				}
 				
@@ -439,23 +391,19 @@ class sql4array
 				if ($klimit !== FALSE && count($this->response) == $limit)
 					break;
 			}
-			
 			$irow++;
 		}
-
 	}
 	
 	/* Return response
 	-------------------------------------------- */
-	private function return_response()
-	{
+	private function return_response(){
 		return $this->response;
 	}
 	
 	/* Return a column of an array
 	-------------------------------------------- */
-	private function split_array($input_array, $column)
-	{	
+	private function split_array($input_array, $column){	
 		$output_array	= array();
 		
 		foreach ($input_array as $key => $value)
@@ -466,8 +414,7 @@ class sql4array
 	
 	/* Entire array search
 	-------------------------------------------- */
-	private function entire_array_search($needle, $array)
-	{
+	private function entire_array_search($needle, $array){
 		foreach($array as $key => $value)
 			if ($value === $needle)
 				$return[] = $key;
