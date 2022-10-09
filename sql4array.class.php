@@ -93,7 +93,7 @@ class sql4array
 	{
 		$this->query              = FALSE;
 		$this->parse_query        = FALSE;
-    $this->replaced_table     = FALSE;
+		$this->replaced_table     = FALSE;
 		$this->parse_query_lower  = FALSE;	
 		$this->parse_select       = FALSE;
 		$this->parse_select_as    = FALSE;
